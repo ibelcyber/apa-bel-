@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bebe? ia</title>
+
+<style>
+body{
+ margin:0;height:100vh;
+ display:flex;justify-content:center;align-items:center;
+ background:#0f0c29;color:#f5f5ff;
+ font-family:Arial,sans-serif
+}
+.card{
+ width:90%;max-width:520px;
+ background:rgba(255,255,255,.08);
+ border-radius:22px;padding:26px
+}
+button{
+ width:100%;padding:13px;margin-top:10px;
+ background:#302b63;color:#fff;border:none;border-radius:12px;
+ cursor:pointer
+}
+button:disabled{opacity:.5}
+.progress{height:6px;background:#333;margin-top:16px;border-radius:6px}
+.bar{height:100%;width:0%;background:#a78bfa}
+.overlay{
+ position:fixed;inset:0;
+ background:rgba(0,0,0,.6);
+ display:none;justify-content:center;align-items:center
+}
+.msg{
+ background:#111;padding:22px;border-radius:16px;
+ text-align:center;max-width:380px
+}
+small{opacity:.7}
+.hasil{
+ text-align:center
+}
+.nilai{
+ font-size:28px;
+ margin:10px 0;
+ color:#a78bfa
+}
+</style>
+</head>
+
+<body>
+
+<!-- VERIFIKASI -->
+<div class="card" id="verif">
+ <h3>Verifikasi</h3>
+ <p>Ini bukan kuis benar–salah. Ini soal cara kamu membaca seseorang.</p>
+ <label><input type="checkbox" id="cek"> Saya siap</label>
+ <button id="mulai" disabled>Mulai</button>
+</div>
+
+<!-- GAME -->
+<div class="card" id="game" style="display:none">
+ <h3>Soal <span id="no">1</span>/40</h3>
+ <p id="q"></p>
+ <div id="opsi"></div>
+ <div class="progress"><div class="bar" id="bar"></div></div>
+</div>
+
+<!-- PESAN -->
+<div class="overlay" id="overlay">
+ <div class="msg">
+  <b id="msg"></b><br><br>
+  <small>ketuk untuk lanjut</small>
+ </div>
+</div>
+
+<script>
+// ================= VERIFIKASI =================
+const cek=document.getElementById("cek");
+const mulai=document.getElementById("mulai");
+cek.onchange=()=>mulai.disabled=!cek.checked;
+
+// ================= DATA =================
+const data=[
+// (DATA SOAL TETAP SAMA SEPERTI FILE KAMU)
+{q:"Apa yang paling sering Bebel sembunyikan?",a:["Perasaan asli","Pikiran terdalam","Rasa kecewa","Ketakutan pribadi"]},
+{q:"Hal pertama yang berubah saat Bebel lelah?",a:["Nada bicara","Cara merespon","Ekspresi wajah","Frekuensi hadir"]},
+{q:"Cara Bebel menghadapi konflik batin?",a:["Memendam","Menghindar","Menganalisis","Menunggu waktu"]},
+{q:"Apa yang paling melukai Bebel?",a:["Diabaikan","Diremehkan","Dibandingkan","Tidak didengar"]},
+{q:"Reaksi awal Bebel saat marah?",a:["Diam","Menjauh","Sarkas","Meledak"]},
+{q:"Arti kesendirian bagi Bebel?",a:["Tenang","Aman","Kosong","Ruang berpikir"]},
+{q:"Bagian hidup yang jarang diceritakan?",a:["Masa lalu","Luka lama","Trauma","Harapan"]},
+{q:"Hal yang paling Bebel takutkan?",a:["Kehilangan orang","Kehilangan kontrol","Sendiri","Berharap"]},
+{q:"Sikap Bebel saat kecewa?",a:["Menarik diri","Mengalihkan diri","Diam","Memendam"]},
+{q:"Alasan Bebel sulit percaya?",a:["Janji","Kata-kata","Perilaku","Pengalaman lama"]},
+
+{q:"Hal yang paling dibenci Bebel?",a:["Dipaksa","Diremehkan","Dimanipulasi","Dibandingkan"]},
+{q:"Yang dibutuhkan Bebel saat capek?",a:["Waktu sendiri","Dipahami","Keheningan","Jarak"]},
+{q:"Perhatian paling berarti bagi Bebel?",a:["Konsistensi","Kejujuran","Usaha kecil","Kehadiran"]},
+{q:"Penyebab Bebel berubah sikap?",a:["Kekecewaan","Pengkhianatan","Realita","Lelah"]},
+{q:"Siapa yang sering disalahkan Bebel?",a:["Diri sendiri","Keadaan","Orang lain","Situasi"]},
+{q:"Alasan Bebel bertahan lama?",a:["Harapan","Takut kehilangan","Kebiasaan","Tanggung jawab"]},
+{q:"Perasaan saat sendirian?",a:["Tenang","Kosong","Penuh pikiran","Biasa saja"]},
+{q:"Alasan Bebel sulit pergi?",a:["Kenangan","Waktu","Perasaan","Janji"]},
+{q:"Topik paling sensitif bagi Bebel?",a:["Kepercayaan","Perasaan","Harga diri","Komitmen"]},
+{q:"Pemicu hilangnya minat?",a:["Dianggap sepele","Dipaksa","Diulang","Diremehkan"]},
+
+{q:"Makna diam lama bagi Bebel?",a:["Menimbang","Menahan emosi","Menghindar","Lelah"]},
+{q:"Kepada siapa Bebel paling jujur?",a:["Diri sendiri","Orang tertentu","Sedikit orang","Tidak siapa-siapa"]},
+{q:"Hal yang membuat Bebel ragu?",a:["Inkonsistensi","Nada bicara","Sikap","Janji"]},
+{q:"Sumber sakit hati terbesar?",a:["Ekspektasi","Harapan","Kenyataan","Perbandingan"]},
+{q:"Ketakutan terbesar Bebel?",a:["Sendiri","Berharap","Salah pilih","Kehilangan"]},
+{q:"Titik berhenti berjuang?",a:["Lelah","Tidak dihargai","Berulang","Terbiasa"]},
+{q:"Hal yang jarang Bebel minta?",a:["Tolong","Perhatian","Validasi","Pengertian"]},
+{q:"Kondisi merasa aman?",a:["Bisa jujur","Tidak dihakimi","Bisa diam","Diterima"]},
+{q:"Pemicu Bebel menjauh?",a:["Diabaikan","Dikontrol","Diremehkan","Dipaksa"]},
+{q:"Penyesalan terbesar Bebel?",a:["Bertahan","Berharap","Percaya","Memaafkan"]},
+
+{q:"Penyebab Bebel menjadi dingin?",a:["Kecewa berulang","Janji kosong","Lelah","Realita"]},
+{q:"Respon saat mental jatuh?",a:["Menarik diri","Diam","Menghindar","Menyendiri"]},
+{q:"Hal yang paling Bebel percayai?",a:["Tindakan","Waktu","Konsistensi","Proses"]},
+{q:"Alasan bertahan terlalu lama?",a:["Kebiasaan","Kenangan","Rasa","Takut kehilangan"]},
+{q:"Sisi diri yang disembunyikan?",a:["Lemah","Takut","Sedih","Butuh"]},
+{q:"Respon saat terluka?",a:["Diam","Menutup diri","Menjauh","Menguatkan diri"]},
+{q:"Penyebab kehilangan arah?",a:["Ekspektasi","Janji","Harapan","Kenyataan"]},
+{q:"Alasan sering memendam?",a:["Takut ribut","Takut ditinggal","Takut salah","Takut kehilangan"]},
+{q:"Perasaan di akhir semuanya?",a:["Kosong","Tenang","Lega","Biasa saja"]}
+];
+
+const pesan=[
+// PESAN TETAP SAMA
+"Dari bebel: di awal saja kamu sudah memilih yang aman.",
+"Dari bebel: kamu menjawab dari pengalamanmu sendiri.",
+"Dari bebel: ini terdengar yakin, tapi belum tentu tepat.",
+"Dari bebel: kamu melihat permukaan dulu.",
+"Dari bebel: cara mikirmu mulai kelihatan.",
+"Dari bebel: kamu nyaman menghindari inti.",
+"Dari bebel: ini refleksi dirimu, bukan aku sepenuhnya.",
+"Dari bebel: kamu memproyeksikan perasaan sendiri.",
+"Dari bebel: kamu ragu tapi tetap memilih.",
+"Dari bebel: ini bukan salah, tapi juga bukan paham.",
+"Dari bebel: kamu terlalu cepat menyimpulkan.",
+"Dari bebel: pola jawabanmu mulai terbaca.",
+"Dari bebel: kamu menilai dengan jarak aman.",
+"Dari bebel: ini jawaban yang tidak berani.",
+"Dari bebel: kamu bertahan, bukan mendalami.",
+"Dari bebel: kamu menjawab agar tidak salah.",
+"Dari bebel: ini bukan pemahaman utuh.",
+"Dari bebel: kamu menghindari bagian sulit.",
+"Dari bebel: kamu tahu arahnya, tapi tidak masuk.",
+"Dari bebel: kamu membaca tanpa menyerap.",
+"Dari bebel: di titik ini kamu mulai lelah.",
+"Dari bebel: fokusmu mulai goyah.",
+"Dari bebel: kamu konsisten, tapi di tempat.",
+"Dari bebel: kamu terlalu percaya diri.",
+"Dari bebel: ini bukan jawaban jujurmu.",
+"Dari bebel: kamu menahan, bukan memahami.",
+"Dari bebel: kamu memilih aman lagi.",
+"Dari bebel: kamu takut salah.",
+"Dari bebel: ini jawaban refleks.",
+"Dari bebel: kamu ingin cepat selesai.",
+"Dari bebel: kamu bertahan karena gengsi.",
+"Dari bebel: kamu membaca, bukan memahami.",
+"Dari bebel: kamu mulai kebal.",
+"Dari bebel: kamu menghindari konflik.",
+"Dari bebel: kamu lelah tapi tetap lanjut.",
+"Dari bebel: ini bukan salahmu, tapi keliru.",
+"Dari bebel: kamu sudah jauh, tapi belum sampai.",
+"Dari bebel: kamu kuat bertahan.",
+"Dari bebel: memahami itu proses.",
+"Dari bebel: selesai. Bertahan iya. Memahami? belum."
+];
+
+// ================= LOGIC =================
+let i=0;
+let skor=0;
+
+const verif=document.getElementById("verif");
+const game=document.getElementById("game");
+const q=document.getElementById("q");
+const no=document.getElementById("no");
+const opsiDiv=document.getElementById("opsi");
+const bar=document.getElementById("bar");
+const overlay=document.getElementById("overlay");
+const msg=document.getElementById("msg");
+
+mulai.onclick=()=>{
+ verif.style.display="none";
+ game.style.display="block";
+ render();
+};
+
+function render(){
+ no.innerText=i+1;
+ q.innerText=data[i].q;
+ opsiDiv.innerHTML="";
+ data[i].a.forEach((o,index)=>{
+  const b=document.createElement("button");
+  b.innerText=o;
+  b.onclick=()=>jawab(index);
+  opsiDiv.appendChild(b);
+ });
+}
+
+function jawab(index){
+ if(index===0 || index===1){
+  skor+=2;
+ }else if(index===2){
+  skor+=1;
+ }
+
+ bar.style.width=((i+1)/40*100)+"%";
+ msg.innerText=pesan[i];
+ overlay.style.display="flex";
+}
+
+overlay.onclick=()=>{
+ overlay.style.display="none";
+ i++;
+ if(i<40){
+   render();
+ }else{
+   tampilHasil();
+ }
+};
+
+function tampilHasil(){
+ let hasil="";
+ if(skor>=65){
+  hasil="Kamu benar-benar berusaha memahami seseorang secara dalam. Kamu membaca makna, bukan hanya sikap.";
+ }else if(skor>=45){
+  hasil="Kamu cukup memahami, tapi masih sering melihat dari sudut pandangmu sendiri.";
+ }else if(skor>=25){
+  hasil="Kamu membaca, tapi belum sepenuhnya memahami. Masih ada asumsi yang bermain.";
+ }else{
+  hasil="Kamu lebih banyak menilai daripada memahami. Coba lebih pelan membaca seseorang.";
+ }
+
+ game.innerHTML=`
+   <div class="hasil">
+     <h2>Hasil Akhir</h2>
+     <div class="nilai">${skor} / 80</div>
+     <p>${hasil}</p>
+     <button onclick="location.reload()">Ulangi</button>
+   </div>
+ `;
+}
+</script>
+
+</body>
+</html>
